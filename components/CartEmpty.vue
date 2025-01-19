@@ -8,9 +8,11 @@
       </svg>
     </div>
 
+    <!-- Başlık -->
     <div class="header">
       <h1>bivagon.com</h1>
     </div>
+
     <div class="content">
       <!-- Sepet ikonu -->
       <div class="custom-icon">
@@ -20,7 +22,16 @@
           <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
         </svg>
       </div>
-      <h2>Sepetin Boş</h2>
+
+      <!-- Dinamik İçerik -->
+      <h2 v-if="cartItems.length === 0">Sepetin Boş</h2>
+      <ul v-else>
+        <li v-for="item in cartItems" :key="item.id">
+          {{ item.name }} - {{ item.price }}₺
+        </li>
+      </ul>
+
+      <!-- Alışverişe Başla Butonu -->
       <button class="shopping-button" @click="goToShopping">
         Alışverişe Başla
       </button>
@@ -29,13 +40,31 @@
 </template>
 
 <script>
+import { getDatabase, ref, onValue } from "firebase/database";
+
 export default {
   name: "CartEmpty",
+  data() {
+    return {
+      cartItems: [], // Sepet öğelerini tutacak
+    };
+  },
   methods: {
     goToShopping() {
-      // Alışverişe Başla butonuna tıklanınca yönlendirme
-      this.$router.push("/"); // Ana sayfaya yönlendirir
+      // Ana sayfaya yönlendirme
+      this.$router.push("/");
     },
+  },
+  mounted() {
+    // Firebase bağlantısı
+    const db = getDatabase();
+    const cartRef = ref(db, "cart"); // "cart" anahtarı altındaki veriler
+
+    // Verileri dinamik olarak çek ve dinle
+    onValue(cartRef, (snapshot) => {
+      const data = snapshot.val();
+      this.cartItems = data ? Object.values(data) : [];
+    });
   },
 };
 </script>
@@ -105,6 +134,19 @@ h2 {
   font-size: 24px;
   color: #1c1c1c;
   margin-bottom: 20px;
+}
+
+/* Sepet öğeleri */
+ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 10px 0;
+}
+
+li {
+  font-size: 18px;
+  color: #333333;
+  margin: 5px 0;
 }
 
 /* Alışverişe Başla butonu */
